@@ -16,13 +16,33 @@ void limparBuffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-void lerStringValida(char *destino, int tamanho, const char *mensagem) {
+void mostrarEstacoesDisponiveis(struct Estacao *estacoes, int numEstacoes) {
+    if (numEstacoes == 0) return;
+    printf(COR_AZUL "\n--- Estacoes Cadastradas no Sistema ---\n" RESET);
+    for (int i = 0; i < numEstacoes; i++) {
+        printf("ID: %04d | Nome: %s\n", estacoes[i].id, estacoes[i].nome);
+    }
+    printf(COR_AZUL "---------------------------------------\n\n" RESET);
+}
+
+void mostrarOperadoresDisponiveis(struct Estacao *estacoes, int numEstacoes) {
+    if (numEstacoes == 0) return;
+    printf(COR_AZUL "\n--- Operadores Cadastrados ---\n" RESET);
+    for (int i = 0; i < numEstacoes; i++) {
+        printf(" - %s\n", estacoes[i].operador);
+    }
+    printf(COR_AZUL "------------------------------\n\n" RESET);
+}
+
+int lerStringValida(char *destino, int tamanho, const char *mensagem) {
     int valido;
     do {
         valido = 1;
         printf("%s", mensagem);
         if (fgets(destino, tamanho, stdin) != NULL) {
             destino[strcspn(destino, "\n")] = 0; // remover newline
+            
+            if (strcmp(destino, "-1") == 0) return 0; // cancelado
             
             if (strlen(destino) == 0) {
                 valido = 0;
@@ -39,6 +59,7 @@ void lerStringValida(char *destino, int tamanho, const char *mensagem) {
             }
         }
     } while (!valido);
+    return 1;
 }
 
 int ehBissexto(int ano) {
@@ -51,9 +72,11 @@ int lerDataValida(struct DataLeitura *data) {
     char linha[100];
     
     do {
-        printf("Digite a data (DD MM AAAA): ");
+        printf("Digite a data (DD MM AAAA) ou -1 para cancelar: ");
         if (fgets(linha, sizeof(linha), stdin) != NULL) {
-            // Conta quantos itens o sscanf conseguiu ler daquela unica linha
+            linha[strcspn(linha, "\n")] = 0;
+            if (strcmp(linha, "-1") == 0) return 0; // cancelado
+            
             if (sscanf(linha, "%d %d %d", &data->dia, &data->mes, &data->ano) == 3) {
                 if (data->ano > 0 && data->mes >= 1 && data->mes <= 12) {
                     int maxDias = diasNoMes[data->mes];
@@ -68,25 +91,27 @@ int lerDataValida(struct DataLeitura *data) {
         }
         
         if (!valido) {
-            printf("Data invalida. Certifique-se de usar espacos (Ex: 15 10 2025).\n");
+            printf(COR_VERMELHO "Data invalida. Certifique-se de usar espacos (Ex: 15 10 2025).\n" RESET);
         }
     } while (!valido);
     
     return 1;
 }
 
-float lerFloatSeguro(const char *mensagem) {
-    float valor;
-    int lido;
+int lerFloatSeguro(const char *mensagem, float *valor) {
+    char linha[100];
     do {
         printf("%s", mensagem);
-        lido = scanf("%f", &valor);
-        limparBuffer();
-        if (lido != 1) {
-            printf("Entrada invalida. Digite um numero real.\n");
+        if (fgets(linha, sizeof(linha), stdin) != NULL) {
+            linha[strcspn(linha, "\n")] = 0;
+            if (strcmp(linha, "-1") == 0) return 0; // cancelado
+            
+            if (sscanf(linha, "%f", valor) == 1) {
+                return 1; // sucesso
+            }
         }
-    } while (lido != 1);
-    return valor;
+        printf(COR_VERMELHO "Entrada invalida. Digite um numero real.\n" RESET);
+    } while (1);
 }
 
 int lerIntSeguro(const char *mensagem, int min, int max) {
@@ -96,8 +121,8 @@ int lerIntSeguro(const char *mensagem, int min, int max) {
         printf("%s", mensagem);
         lido = scanf("%d", &valor);
         limparBuffer();
-        if (lido != 1 || valor < min || valor > max) {
-            printf("Entrada invalida. Digite um numero entre %d e %d.\n", min, max);
+        if (lido != 1 || (valor < min && valor != -1) || valor > max) {
+            printf(COR_VERMELHO "Entrada invalida. Digite um numero entre %d e %d.\n" RESET, min, max);
             lido = 0;
         }
     } while (lido != 1);
@@ -114,7 +139,6 @@ float calcularMediaRecursiva(float *leituras, int n, int indice, float somaAtual
 void calcularEstatisticas(struct Estacao *estacao) {
     if (estacao->n <= 0) return;
     
-    // Calculo da media usando a funcao recursiva obrigatoria
     estacao->media = calcularMediaRecursiva(estacao->leituras, estacao->n, 0, 0.0);
     
     float somaDiferencasQuadrado = 0.0;
@@ -128,48 +152,51 @@ void calcularEstatisticas(struct Estacao *estacao) {
 }
 
 void adicionarEstacao(struct Estacao **estacoes, int *numEstacoes) {
-    limparBuffer(); // para limpar o \n deixado pelo lerOpcao da main
-    
     struct Estacao nova;
     
-    nova.id = lerIntSeguro("Digite o ID da estacao (0-9999): ", 0, 9999);
+    nova.id = lerIntSeguro("Digite o ID da estacao (0-9999) ou -1 para cancelar: ", 0, 9999);
+    if (nova.id == -1) {
+        printf(COR_AMARELO "Operacao cancelada pelo usuario.\n" RESET);
+        return;
+    }
     
-    // Validar ID unico
     for (int i = 0; i < *numEstacoes; i++) {
         if ((*estacoes)[i].id == nova.id) {
-            printf("Erro: ID ja existe.\n");
-            return; // Poderia pedir de novo, mas vamos simplificar abortando ou pedindo dnv. A instrucao diz: solicitar nova entrada.
-            // Para simplificar, vou deixar assim e melhorar depois se necessario.
+            printf(COR_VERMELHO "Erro: ID ja existe.\n" RESET);
+            return;
         }
     }
     
-    lerStringValida(nova.nome, 60, "Digite o nome da estacao: ");
-    lerStringValida(nova.operador, 60, "Digite o operador responsavel: ");
-    lerStringValida(nova.sensor, 60, "Digite o tipo de sensor: ");
+    if (!lerStringValida(nova.nome, 60, "Digite o nome da estacao (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+    if (!lerStringValida(nova.operador, 60, "Digite o operador responsavel (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+    if (!lerStringValida(nova.sensor, 60, "Digite o tipo de sensor (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
     
-    lerDataValida(&nova.data);
+    if (!lerDataValida(&nova.data)) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
     
-    nova.n = lerIntSeguro("Digite a quantidade de leituras (1-9998): ", 1, 9998);
+    nova.n = lerIntSeguro("Digite a quantidade de leituras (1-9998) ou -1 para cancelar: ", 1, 9998);
+    if (nova.n == -1) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
     
-    // Alocacao dinamica para leituras
     nova.leituras = (float *)malloc(nova.n * sizeof(float));
     if (nova.leituras == NULL) {
-        printf("Erro de alocacao de memoria.\n");
+        printf(COR_VERMELHO "Erro de alocacao de memoria.\n" RESET);
         return;
     }
     
     for (int i = 0; i < nova.n; i++) {
-        char msg[50];
-        snprintf(msg, sizeof(msg), "Leitura %d: ", i + 1);
-        nova.leituras[i] = lerFloatSeguro(msg);
+        char msg[100];
+        snprintf(msg, sizeof(msg), "Leitura %d (ou -1 para cancelar): ", i + 1);
+        if (!lerFloatSeguro(msg, &nova.leituras[i])) {
+            printf(COR_AMARELO "Cancelado pelo usuario.\n" RESET);
+            free(nova.leituras);
+            return;
+        }
     }
     
     calcularEstatisticas(&nova);
     
-    // Adicionando ao array
     struct Estacao *temp = realloc(*estacoes, (*numEstacoes + 1) * sizeof(struct Estacao));
     if (temp == NULL) {
-        printf("Erro ao redimensionar memoria para estacoes.\n");
+        printf(COR_VERMELHO "Erro ao redimensionar memoria para estacoes.\n" RESET);
         free(nova.leituras);
         return;
     }
@@ -182,44 +209,72 @@ void adicionarEstacao(struct Estacao **estacoes, int *numEstacoes) {
 }
 
 void editarEstacao(struct Estacao *estacoes, int numEstacoes) {
-    limparBuffer();
-    int id = lerIntSeguro("Digite o ID da estacao a editar: ", 0, 9999);
+    if (numEstacoes == 0) {
+        printf(COR_VERMELHO "Nenhuma estacao para editar.\n" RESET);
+        return;
+    }
+    
+    mostrarEstacoesDisponiveis(estacoes, numEstacoes);
+    int id = lerIntSeguro("Digite o ID da estacao a editar (ou -1 para cancelar): ", 0, 9999);
+    if (id == -1) {
+        printf(COR_AMARELO "Operacao cancelada pelo usuario.\n" RESET);
+        return;
+    }
     
     for (int i = 0; i < numEstacoes; i++) {
         if (estacoes[i].id == id) {
             printf("Estacao encontrada: %s\n", estacoes[i].nome);
             printf("1-Nome, 2-Operador, 3-Sensor, 4-Data\n");
-            int opcao = lerIntSeguro("O que deseja editar (1-4)? ", 1, 4);
+            int opcao = lerIntSeguro("O que deseja editar (1-4) ou -1 para cancelar? ", -1, 4);
             
-            if (opcao == 1) lerStringValida(estacoes[i].nome, 60, "Novo nome: ");
-            else if (opcao == 2) lerStringValida(estacoes[i].operador, 60, "Novo operador: ");
-            else if (opcao == 3) lerStringValida(estacoes[i].sensor, 60, "Novo sensor: ");
-            else if (opcao == 4) lerDataValida(&estacoes[i].data);
+            if (opcao == -1) {
+                printf(COR_AMARELO "Edicao cancelada pelo usuario.\n" RESET);
+                return;
+            }
             
-            printf("Estacao atualizada com sucesso!\n");
+            if (opcao == 1) {
+                if (!lerStringValida(estacoes[i].nome, 60, "Novo nome (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+            }
+            else if (opcao == 2) {
+                if (!lerStringValida(estacoes[i].operador, 60, "Novo operador (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+            }
+            else if (opcao == 3) {
+                if (!lerStringValida(estacoes[i].sensor, 60, "Novo sensor (ou -1 para cancelar): ")) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+            }
+            else if (opcao == 4) {
+                if (!lerDataValida(&estacoes[i].data)) { printf(COR_AMARELO "Cancelado.\n" RESET); return; }
+            }
+            
+            printf(COR_VERDE "Estacao atualizada com sucesso!\n" RESET);
             return;
         }
     }
-    printf("Estacao com ID %d nao encontrada.\n", id);
+    printf(COR_VERMELHO "Estacao com ID %d nao encontrada.\n" RESET, id);
 }
 
 void removerEstacao(struct Estacao **estacoes, int *numEstacoes) {
-    limparBuffer();
-    int id = lerIntSeguro("Digite o ID da estacao a remover: ", 0, 9999);
+    if (*numEstacoes == 0) {
+        printf(COR_VERMELHO "Nenhuma estacao para remover.\n" RESET);
+        return;
+    }
+    
+    mostrarEstacoesDisponiveis(*estacoes, *numEstacoes);
+    int id = lerIntSeguro("Digite o ID da estacao a remover (ou -1 para cancelar): ", 0, 9999);
+    if (id == -1) {
+        printf(COR_AMARELO "Operacao cancelada pelo usuario.\n" RESET);
+        return;
+    }
     
     for (int i = 0; i < *numEstacoes; i++) {
         if ((*estacoes)[i].id == id) {
-            // Liberar memoria
             free((*estacoes)[i].leituras);
             
-            // Deslocar array
             for (int j = i; j < *numEstacoes - 1; j++) {
                 (*estacoes)[j] = (*estacoes)[j + 1];
             }
             
             (*numEstacoes)--;
             
-            // Realloc
             if (*numEstacoes > 0) {
                 struct Estacao *temp = realloc(*estacoes, (*numEstacoes) * sizeof(struct Estacao));
                 if (temp != NULL) {
@@ -256,55 +311,76 @@ void listarEstacoes(struct Estacao *estacoes, int numEstacoes) {
 }
 
 void buscarPorOperador(struct Estacao *estacoes, int numEstacoes) {
-    limparBuffer();
+    if (numEstacoes == 0) {
+        printf(COR_VERMELHO "Nenhuma estacao cadastrada.\n" RESET);
+        return;
+    }
+    mostrarOperadoresDisponiveis(estacoes, numEstacoes);
+    
     char operador[60];
-    lerStringValida(operador, 60, "Digite o nome do operador para busca: ");
+    if (!lerStringValida(operador, 60, "Digite o nome do operador para busca (ou -1 para cancelar): ")) {
+        printf(COR_AMARELO "Busca cancelada.\n" RESET);
+        return;
+    }
     
     int encontrou = 0;
     for (int i = 0; i < numEstacoes; i++) {
         if (strcmp(estacoes[i].operador, operador) == 0) {
-            printf("\nID: %d | Nome: %s\n", estacoes[i].id, estacoes[i].nome);
+            printf(COR_VERDE "\nID: %04d | Nome: %s\n" RESET, estacoes[i].id, estacoes[i].nome);
             encontrou = 1;
         }
     }
     if (!encontrou) {
-        printf("Nenhuma estacao encontrada para o operador '%s'.\n", operador);
+        printf(COR_VERMELHO "Nenhuma estacao encontrada para o operador '%s'.\n" RESET, operador);
     }
 }
 
 void detectarAnomalias(struct Estacao *estacoes, int numEstacoes) {
-    limparBuffer();
-    int id = lerIntSeguro("Digite o ID da estacao para checar anomalias: ", 0, 9999);
+    if (numEstacoes == 0) {
+        printf(COR_VERMELHO "Nenhuma estacao cadastrada para checar.\n" RESET);
+        return;
+    }
+    mostrarEstacoesDisponiveis(estacoes, numEstacoes);
+    int id = lerIntSeguro("Digite o ID da estacao para checar (ou -1 para cancelar): ", 0, 9999);
+    if (id == -1) {
+        printf(COR_AMARELO "Operacao cancelada pelo usuario.\n" RESET);
+        return;
+    }
     
     for (int i = 0; i < numEstacoes; i++) {
         if (estacoes[i].id == id) {
-            printf("Anomalias na estacao %s (Media: %.2f, 2*Desvio: %.2f):\n", 
-                estacoes[i].nome, estacoes[i].media, 2 * estacoes[i].desvioPadrao);
+            printf(COR_AMARELO "Checando anomalias na estacao %s...\n" RESET, estacoes[i].nome);
+            printf("Limites matematicos da amostra: (Media: %.2f | 2*Desvio: %.2f)\n", 
+                estacoes[i].media, 2 * estacoes[i].desvioPadrao);
             
             int encontrou = 0;
             for (int j = 0; j < estacoes[i].n; j++) {
                 if (fabs(estacoes[i].leituras[j] - estacoes[i].media) > 2 * estacoes[i].desvioPadrao) {
-                    printf("  - Leitura %d: %.2f\n", j + 1, estacoes[i].leituras[j]);
+                    printf(COR_VERMELHO "  [!] ALERTA - Leitura %d: %.2f se afasta muito da media!\n" RESET, j + 1, estacoes[i].leituras[j]);
                     encontrou = 1;
                 }
             }
             if (!encontrou) {
-                printf("  Nenhuma anomalia detectada.\n");
+                printf(COR_VERDE "  Nenhuma anomalia detectada matematicamente.\n" RESET);
             }
             return;
         }
     }
-    printf("Estacao com ID %d nao encontrada.\n", id);
+    printf(COR_VERMELHO "Estacao com ID %d nao encontrada.\n" RESET, id);
 }
 
 void salvarCSV(struct Estacao *estacoes, int numEstacoes) {
-    FILE *arquivo = fopen("dados.csv", "w");
-    if (arquivo == NULL) {
-        printf("Erro ao criar o arquivo CSV.\n");
+    if (numEstacoes == 0) {
+        printf(COR_VERMELHO "Nao ha dados para salvar no CSV.\n" RESET);
         return;
     }
     
-    // Cabecalho
+    FILE *arquivo = fopen("dados.csv", "w");
+    if (arquivo == NULL) {
+        printf(COR_VERMELHO "Erro ao criar o arquivo CSV.\n" RESET);
+        return;
+    }
+    
     fprintf(arquivo, "ID,Nome,Operador,Sensor,Data,N,Media,Variancia,DesvioPadrao,Leituras\n");
     
     for (int i = 0; i < numEstacoes; i++) {
@@ -320,17 +396,16 @@ void salvarCSV(struct Estacao *estacoes, int numEstacoes) {
     }
     
     fclose(arquivo);
-    printf("Dados salvos com sucesso em dados.csv.\n");
+    printf(COR_VERDE "Dados salvos com sucesso em dados.csv!\n" RESET);
 }
 
 void carregarCSV(struct Estacao **estacoes, int *numEstacoes) {
     FILE *arquivo = fopen("dados.csv", "r");
     if (arquivo == NULL) {
-        printf("Arquivo dados.csv nao encontrado.\n");
+        printf(COR_VERMELHO "Arquivo dados.csv nao encontrado. Salve primeiro.\n" RESET);
         return;
     }
     
-    // Limpar estado atual para evitar vazamento
     for (int i = 0; i < *numEstacoes; i++) {
         free((*estacoes)[i].leituras);
     }
@@ -339,11 +414,9 @@ void carregarCSV(struct Estacao **estacoes, int *numEstacoes) {
     *numEstacoes = 0;
     
     char linha[1024];
-    // Ignorar cabecalho
     fgets(linha, sizeof(linha), arquivo);
     
     while (fgets(linha, sizeof(linha), arquivo) != NULL) {
-        // Remover \n
         linha[strcspn(linha, "\n")] = 0;
         
         struct Estacao nova;
@@ -364,12 +437,9 @@ void carregarCSV(struct Estacao **estacoes, int *numEstacoes) {
         token = strtok(NULL, ","); nova.desvioPadrao = atof(token);
         
         nova.leituras = (float *)malloc(nova.n * sizeof(float));
-        token = strtok(NULL, ","); // A parte final: leituras separadas por ;
+        token = strtok(NULL, ","); 
         
         if (token != NULL) {
-            // Precisamos quebrar o token interno com ";"
-            // Como strtok ja ta usando ',', o resto da linha inteira deve ser o token
-            // Vamos fazer um parse manual ou usar strtof
             char *ptr = token;
             for (int i = 0; i < nova.n; i++) {
                 nova.leituras[i] = strtof(ptr, &ptr);
@@ -384,5 +454,5 @@ void carregarCSV(struct Estacao **estacoes, int *numEstacoes) {
     }
     
     fclose(arquivo);
-    printf("Dados carregados com sucesso! (%d estacoes)\n", *numEstacoes);
+    printf(COR_VERDE "Dados carregados com sucesso! (%d estacoes encontradas)\n" RESET, *numEstacoes);
 }

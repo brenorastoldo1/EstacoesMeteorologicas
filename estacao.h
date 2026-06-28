@@ -29,9 +29,9 @@ struct Estacao {
 
 // Funções Auxiliares (Validações e UX)
 void pausarTela();
-void lerStringValida(char *destino, int tamanho, const char *mensagem);
+int lerStringValida(char *destino, int tamanho, const char *mensagem);
 int lerDataValida(struct DataLeitura *data);
-float lerFloatSeguro(const char *mensagem);
+int lerFloatSeguro(const char *mensagem, float *valor);
 int lerIntSeguro(const char *mensagem, int min, int max);
 
 // Estatísticas

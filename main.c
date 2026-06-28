@@ -24,6 +24,8 @@ int lerOpcao() {
         while (getchar() != '\n');
         return -1;
     }
+    // Consumir a quebra de linha deixada pelo scanf no sucesso
+    while (getchar() != '\n');
     return opcao;
 }
 
@@ -87,7 +89,8 @@ int main() {
                 }
                 break;
             default:
-                printf("Opcao invalida. Tente novamente.\n");
+                printf(COR_VERMELHO "Opcao invalida. Tente novamente.\n" RESET);
+                pausarTela();
         }
     } while (opcao != 0);
 
