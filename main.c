@@ -29,6 +29,8 @@ int lerOpcao() {
 
 int main() {
     int opcao;
+    struct Estacao *estacoes = NULL;
+    int numEstacoes = 0;
 
     do {
         exibirMenu();
@@ -36,31 +38,40 @@ int main() {
 
         switch (opcao) {
             case 1:
-                printf("Em desenvolvimento...\n");
+                adicionarEstacao(&estacoes, &numEstacoes);
                 break;
             case 2:
-                printf("Em desenvolvimento...\n");
+                editarEstacao(estacoes, numEstacoes);
                 break;
             case 3:
-                printf("Em desenvolvimento...\n");
+                removerEstacao(&estacoes, &numEstacoes);
                 break;
             case 4:
-                printf("Em desenvolvimento...\n");
+                listarEstacoes(estacoes, numEstacoes);
                 break;
             case 5:
-                printf("Em desenvolvimento...\n");
+                buscarPorOperador(estacoes, numEstacoes);
                 break;
             case 6:
-                printf("Em desenvolvimento...\n");
+                detectarAnomalias(estacoes, numEstacoes);
                 break;
             case 7:
-                printf("Em desenvolvimento...\n");
+                salvarCSV(estacoes, numEstacoes);
                 break;
             case 8:
-                printf("Em desenvolvimento...\n");
+                carregarCSV(&estacoes, &numEstacoes);
                 break;
             case 0:
                 printf("Saindo do sistema...\n");
+                // Liberar memoria alocada antes de sair
+                for (int i = 0; i < numEstacoes; i++) {
+                    if (estacoes[i].leituras != NULL) {
+                        free(estacoes[i].leituras);
+                    }
+                }
+                if (estacoes != NULL) {
+                    free(estacoes);
+                }
                 break;
             default:
                 printf("Opcao invalida. Tente novamente.\n");

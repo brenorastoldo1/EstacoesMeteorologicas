@@ -20,6 +20,26 @@ struct Estacao {
     struct DataLeitura data;
 };
 
-// Assinaturas de funcoes (a serem implementadas no futuro)
+// Funções Auxiliares (Validações)
+void lerStringValida(char *destino, int tamanho, const char *mensagem);
+int lerDataValida(struct DataLeitura *data);
+float lerFloatSeguro(const char *mensagem);
+int lerIntSeguro(const char *mensagem, int min, int max);
+
+// Estatísticas
+void calcularEstatisticas(struct Estacao *estacao);
+float calcularMediaRecursiva(float *leituras, int n, int indice, float somaAtual);
+
+// Funções de CRUD (Interface de Negócios)
+void adicionarEstacao(struct Estacao **estacoes, int *numEstacoes);
+void editarEstacao(struct Estacao *estacoes, int numEstacoes);
+void removerEstacao(struct Estacao **estacoes, int *numEstacoes);
+void listarEstacoes(struct Estacao *estacoes, int numEstacoes);
+void buscarPorOperador(struct Estacao *estacoes, int numEstacoes);
+void detectarAnomalias(struct Estacao *estacoes, int numEstacoes);
+
+// Manipulação de Arquivos CSV
+void salvarCSV(struct Estacao *estacoes, int numEstacoes);
+void carregarCSV(struct Estacao **estacoes, int *numEstacoes);
 
 #endif // ESTACAO_H
