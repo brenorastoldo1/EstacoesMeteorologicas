@@ -1,8 +1,8 @@
-# Sistema de Monitoramento de Estacoes Meteorologicas 🌤️
+# Sistema de Monitoramento de Estacoes Meteorologicas
 
 Ola! Este e o repositorio do meu trabalho pratico da disciplina. O objetivo principal deste projeto foi desenvolver um sistema em C para gerenciar e analisar dados de estacoes meteorologicas, aplicando conceitos importantes que aprendemos ao longo do semestre.
 
-## 🛠️ O que tem debaixo do capo?
+## O que tem debaixo do capo?
 
 Escrevi o codigo focando em deixar a arquitetura bem modularizada (separando a logica de negocio da interface do usuario entre `main.c`, `estacao.c` e `estacao.h`). Abaixo estao os principais conceitos tecnicos que apliquei para fazer tudo funcionar perfeitamente:
 
@@ -13,7 +13,7 @@ Escrevi o codigo focando em deixar a arquitetura bem modularizada (separando a l
 - **Persistencia de Dados (CSV):** O sistema nao perde os dados ao ser fechado. Criei uma rotina de Leitura/Escrita manipulando o arquivo `.csv`. O maior desafio aqui foi utilizar a funcao `strtok` para separar corretamente as propriedades da estacao (que sao separadas por virgula `,`) e as leituras do sensor em si (que ficam em uma celula final agrupadas por ponto-e-virgula `;`).
 - **Validacoes & Experiencia (UX):** Deixei o terminal bem mais amigavel! Adicionei limpezas de tela (`cls`), limpezas de buffer (`fflush`/`getchar`), e uso codigos ANSI para imprimir textos coloridos (verde para sucesso, vermelho para erros). Alem de travar bugs, o usuario pode digitar `-1` a qualquer momento em qualquer input do sistema para cancelar o processo e voltar ao menu de forma segura.
 
-## 🚀 Como compilar e testar
+## Como compilar e testar
 
 Para rodar o projeto na sua maquina, basta abrir o terminal na raiz do projeto e rodar a compilacao:
 
@@ -27,4 +27,4 @@ Depois de compilado, basta iniciar o executavel:
 ./sistema_estacoes.exe
 ```
 
-Fique a vontade para testar as validacoes de letras, inserir anomalias matematicas no sensor e brincar com o codigo. Deu um trabalho excelente, mas serviu muito para sedimentar a logica de ponteiros na cabeca! Espero que goste da correcao! ✌️
+Fique a vontade para testar as validacoes de letras, inserir anomalias matematicas no sensor e brincar com o codigo. Deu um trabalho excelente, mas serviu muito para sedimentar a logica de ponteiros na cabeca! Espero que goste da correcao!
