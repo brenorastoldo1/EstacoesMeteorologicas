@@ -5,6 +5,12 @@
 #include <math.h>
 #include <ctype.h>
 
+void pausarTela() {
+    printf(COR_AMARELO "\nPressione ENTER para continuar..." RESET);
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 void limparBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -29,7 +35,7 @@ void lerStringValida(char *destino, int tamanho, const char *mensagem) {
                 }
             }
             if (!valido) {
-                printf("Entrada invalida. Use apenas letras e espacos.\n");
+                printf(COR_VERMELHO "Entrada invalida. Use apenas letras e espacos.\n" RESET);
             }
         }
     } while (!valido);
@@ -42,26 +48,27 @@ int ehBissexto(int ano) {
 int lerDataValida(struct DataLeitura *data) {
     int diasNoMes[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     int valido = 0;
+    char linha[100];
     
     do {
         printf("Digite a data (DD MM AAAA): ");
-        if (scanf("%d %d %d", &data->dia, &data->mes, &data->ano) == 3) {
-            limparBuffer(); // limpar depois de ler
-            if (data->ano > 0 && data->mes >= 1 && data->mes <= 12) {
-                int maxDias = diasNoMes[data->mes];
-                if (data->mes == 2 && ehBissexto(data->ano)) {
-                    maxDias = 29;
-                }
-                if (data->dia >= 1 && data->dia <= maxDias) {
-                    valido = 1;
+        if (fgets(linha, sizeof(linha), stdin) != NULL) {
+            // Conta quantos itens o sscanf conseguiu ler daquela unica linha
+            if (sscanf(linha, "%d %d %d", &data->dia, &data->mes, &data->ano) == 3) {
+                if (data->ano > 0 && data->mes >= 1 && data->mes <= 12) {
+                    int maxDias = diasNoMes[data->mes];
+                    if (data->mes == 2 && ehBissexto(data->ano)) {
+                        maxDias = 29;
+                    }
+                    if (data->dia >= 1 && data->dia <= maxDias) {
+                        valido = 1;
+                    }
                 }
             }
-        } else {
-            limparBuffer(); // limpar lixo
         }
         
         if (!valido) {
-            printf("Data invalida. Tente novamente.\n");
+            printf("Data invalida. Certifique-se de usar espacos (Ex: 15 10 2025).\n");
         }
     } while (!valido);
     
@@ -171,7 +178,7 @@ void adicionarEstacao(struct Estacao **estacoes, int *numEstacoes) {
     (*estacoes)[*numEstacoes] = nova;
     (*numEstacoes)++;
     
-    printf("Estacao adicionada com sucesso!\n");
+    printf(COR_VERDE "Estacao adicionada com sucesso!\n" RESET);
 }
 
 void editarEstacao(struct Estacao *estacoes, int numEstacoes) {
@@ -223,25 +230,27 @@ void removerEstacao(struct Estacao **estacoes, int *numEstacoes) {
                 *estacoes = NULL;
             }
             
-            printf("Estacao removida com sucesso.\n");
+            printf(COR_VERDE "Estacao removida com sucesso.\n" RESET);
             return;
         }
     }
-    printf("Estacao com ID %d nao encontrada.\n", id);
+    printf(COR_VERMELHO "Estacao com ID %d nao encontrada.\n" RESET, id);
 }
 
 void listarEstacoes(struct Estacao *estacoes, int numEstacoes) {
     if (numEstacoes == 0) {
-        printf("Nenhuma estacao cadastrada.\n");
+        printf(COR_VERMELHO "Nenhuma estacao cadastrada.\n" RESET);
         return;
     }
     
     for (int i = 0; i < numEstacoes; i++) {
-        printf("\nID: %d | Nome: %s | Operador: %s | Sensor: %s\n", 
-            estacoes[i].id, estacoes[i].nome, estacoes[i].operador, estacoes[i].sensor);
-        printf("Data: %02d/%02d/%04d | Leituras: %d\n", 
-            estacoes[i].data.dia, estacoes[i].data.mes, estacoes[i].data.ano, estacoes[i].n);
-        printf("Media: %.2f | Variancia: %.2f | Desvio-Padrao: %.2f\n", 
+        printf(COR_AZUL "\n--- Estacao ID: %04d ---\n" RESET, estacoes[i].id);
+        printf("Nome:\t\t%s\nOperador:\t%s\nSensor:\t\t%s\n", 
+            estacoes[i].nome, estacoes[i].operador, estacoes[i].sensor);
+        printf("Data:\t\t%02d/%02d/%04d\n", 
+            estacoes[i].data.dia, estacoes[i].data.mes, estacoes[i].data.ano);
+        printf("N. Leituras:\t%d\n", estacoes[i].n);
+        printf(COR_VERDE "Media:\t\t%.2f\nVariancia:\t%.2f\nDesvio-Padrao:\t%.2f\n" RESET, 
             estacoes[i].media, estacoes[i].variancia, estacoes[i].desvioPadrao);
     }
 }

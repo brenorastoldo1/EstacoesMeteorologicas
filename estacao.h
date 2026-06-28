@@ -20,7 +20,15 @@ struct Estacao {
     struct DataLeitura data;
 };
 
-// Funções Auxiliares (Validações)
+// Cores ANSI para o Terminal (UX)
+#define RESET "\x1b[0m"
+#define COR_VERDE "\x1b[32m"
+#define COR_VERMELHO "\x1b[31m"
+#define COR_AZUL "\x1b[36m" // Usando Ciano para ficar mais legível em fundo preto
+#define COR_AMARELO "\x1b[33m"
+
+// Funções Auxiliares (Validações e UX)
+void pausarTela();
 void lerStringValida(char *destino, int tamanho, const char *mensagem);
 int lerDataValida(struct DataLeitura *data);
 float lerFloatSeguro(const char *mensagem);
